@@ -1,0 +1,119 @@
+<search>
+
+
+<form onsubmit="{ submit }">
+
+	<label> Rechercher</label>
+	<input oninput={
+					search
+					} 
+				list="searcher-datalist"/>
+	<button>🔍</button>
+
+
+	<datalist id="searcher-datalist">
+		<option  each={ movie in state.movieSearchOption } value="{movie.title}">
+    </datalist>
+
+
+</form>
+  <script>
+	  export default {
+		  state: {
+			  movieSearchOption:[],
+			  text : ''
+		  },
+
+		  onBeforeMount (props,state) {
+		  	this.search = debounce(this._search, 500)
+
+		  	this.props.initDisableSearch((fct)=>{
+		  		this.update({
+		  			text : ''
+		  		})
+		  		this.$('input').value = "";
+		  	})
+
+		  	this.props.initSearchMovieUpdate(this.submit)
+		  },
+
+		  onMounted() {
+
+		  	this.$('input').addEventListener("input", (e)=>{
+		  		this.update({
+		  			text : e.target.value
+		  		})
+		  	})
+
+		  },
+
+
+		  async submit(e)
+		  {
+		  	e.preventDefault()
+
+		  	/* localStorage */
+
+		  	this.props.setIsLoading(true)
+		  	this.props.updateLoading()
+
+		  	let result = []
+		  	if(this.state.text.length != 0)
+		  	{
+		  		console.log("Search in API with input : \n" + " Text :" + this.state.text +"\n" + " Filters/Genre : cleared!")
+		  		this.lsManager.setItem("actual_page", 1)
+		  		result = await this.serviceAjax.searchMovies(this.lsManager.getItem("actual_page", 1), this.state.text)
+
+		  		if(result != [])
+			  	{
+		  			this.lsManager.setItem("currentMovieList", result)
+		  			this.props.setCurrentMovieList(result)
+		  			this.props.setIsSearching(true)
+		  			this.props.updateMovieList()
+		  			this.props.disableFilter()
+		  			this.props.disableGenres()
+		  		}
+
+		  	}
+		  	
+		  	
+
+
+
+		  	this.props.setIsLoading(false)
+		  	this.props.updateLoading()
+
+
+			this.lsManager.setItem("actual_page", 1);
+		  	
+
+		  },
+
+
+
+		  async _search(e) {
+		  	
+
+		  	if(this.state.text.length != 0)
+		  	{
+		  		let movies = await this.serviceAjax.searchMovies(1, this.state.text)
+		  		this.update({
+		  			movieSearchOption : movies.results
+		  		})
+		  	}
+
+
+		  }
+
+
+	  }
+  </script>
+
+
+<style>
+	input {
+		border:solid 1px;
+	}
+</style>
+</search>
+

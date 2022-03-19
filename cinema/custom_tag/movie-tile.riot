@@ -1,0 +1,85 @@
+<movie-tile>
+
+	<a onclick="{focusMovie}" href="./movie.html?movie={this.props.movie.id}">
+		<h4> {this.props.movie.title} </h4>
+
+		<img if="{this.state.poster_loading == false}" src="{this.state.poster_image}" class="poster"> </img>
+		<img if="{this.state.poster_loading == true }" src="spinning-circles.svg" />
+
+	</a>
+
+	<div if="{this.lsManager.getItem("visible", true)}"class="movie_subInfo">
+
+		<ul class="genres">
+			<li each={genre in this.state.genres}> {genre}</li>
+		</ul>
+
+	<star-rate rate="{this.props.movie.vote_average}"></star-rate> 
+
+
+	</div>
+
+	<script>	
+
+		export default 
+		{ 
+			onBeforeMount (props,state) {
+				this.state = {
+					movie: [],
+					genres: [],
+					poster_loading : false,
+					poster_image : "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/"+this.props.movie.poster_path
+				}
+			},
+
+			onMounted()
+			{
+
+				for(let i = 0; i < this.props.movie.genre_ids.length; i++)
+					this.state.genres.push(this.getGenreWithId(this.props.movie.genre_ids[i]))
+
+				/* Si le poster n'est pas dans movie DB*/
+				if(this.props.movie.poster_path == undefined)		
+					this.update({poster_image : "./ressources/error_movie.jpg"})
+
+				this.setLoadPosterSpinner()
+				this.update();
+			},
+
+
+			setLoadPosterSpinner()
+			{
+				let poster = this.$('img');
+				this.update({poster_loading : true})
+
+				poster.addEventListener("load", (e)=>{
+					this.state.poster_loading = false;
+					this.update()
+				})
+			},
+
+
+			getGenreWithId(id)
+			{
+				for(let i =0; i < this.genresList.genres.length; i++) {
+					if(this.genresList.genres[i]['id'] == id) {
+						return this.genresList.genres[i]['name']
+					}
+				}
+				return null
+			},
+
+			focusMovie()
+			{
+
+			}
+
+		}
+	</script>
+
+	<style>
+		img{
+			width: 100px
+		}
+	</style>
+</movie-tile>

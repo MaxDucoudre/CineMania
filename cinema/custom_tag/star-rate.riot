@@ -1,0 +1,47 @@
+<star-rate>
+<div class="w3-container w3-teal">
+
+          <img class="w3-left-align" each="{i in new Array(10)}" src="./ressources/star.png">  
+          <p class="w3-right-align">{this.props.rate}</p>
+</div> 	
+
+	<script>
+	 export default 
+	 { 
+
+		  onBeforeMount (props,state) {
+		  	this.state = {
+			  star_path : "./ressources/star.png"
+		  	}
+		  },
+
+		  onMounted()
+		  {
+		  	let starImg = this.$$('img')
+
+		  	for(let i = 0; i<starImg.length; i++)
+		  	{
+		  		if(i > this.props.rate){
+		  			starImg[i].classList.add("void-star")
+		  		}
+		  	}
+			
+
+		  }
+
+	}
+
+	</script>
+
+
+	<style>
+
+	img {
+      width: 5%;
+    }
+
+    .void-star {
+      filter: grayscale(100%);
+    }
+	</style>
+</star-rate>

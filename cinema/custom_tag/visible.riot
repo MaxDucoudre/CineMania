@@ -1,0 +1,51 @@
+<visible>
+
+<button onclick="{clickOnButton}" class="select">👁</button>
+
+<script>
+	
+	 	 export default 
+	 { 
+		  onBeforeMount (props,state) {
+		  	this.state = {
+		  		selected : this.lsManager.getItem("visible", true)
+		  	}
+
+		  },
+
+		  onMounted()
+		  {
+			if(this.state.selected){
+		  		this.$('button').classList.add("select")
+		  	} else {
+		  		this.$('button').classList.remove("select")
+
+		  	}
+		  },
+
+		  clickOnButton()
+		  {
+		  	if(this.state.selected == true)
+		  	{
+		  		this.$('button').classList.remove("select")
+		  		this.update({selected:false})
+		  	} else {
+			  	this.$('button').classList.add("select")
+		  		this.update({selected:true})
+		  	}
+
+
+			this.lsManager.setItem("visible",this.state.selected)
+			this.props.updateMovieList()
+	
+		  }
+
+		}
+</script>
+
+<style >
+	.select {
+		background-color: blue;
+	}
+</style>
+</visible>

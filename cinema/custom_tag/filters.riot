@@ -1,0 +1,129 @@
+<filters>
+
+
+	<ul class="filters">
+		<li>  <a onclick= "{selectFilter}" id="popularity" href="#">Populaires</a></li>
+		<li>  <a onclick= "{selectFilter}" id="rate" href="#">Mieux notés</a></li>
+		<li>  <a onclick= "{selectFilter}" id="coming" href="#">A venir</a></li>
+		<li>  <a onclick= "{selectFilter}" id="new" href="#">A l'affiche</a></li>
+	</ul>
+
+<script>
+	 export default 
+	 {
+
+		  onBeforeMount (props,state) {
+		  	this.state = {
+			  selectedFilter : ""
+		  	}
+
+
+		  	this.state.selectedFilter = this.lsManager.getItem("sort_type", "popularity.asc")
+		  	this.lsManager.setItem("enable_date", false)
+
+
+		  	this.props.initDisableFilter((fct)=>{
+			  	let filters = this.$$('a')
+			  	for(let i = 0; i<filters.length; i++) {
+			  		filters[i].classList.remove("selected-filter") 
+			  		this.state.selectedFilter = "popularity.asc"
+		  			this.lsManager.setItem("selected_button", "popularity.asc")
+
+			  	}
+		  	})
+
+
+		  
+
+		  },
+
+		  selectFilter(e)
+		  {
+
+		  	let filters = this.$$('a')
+
+		  	for(let i = 0; i<filters.length; i++)
+		  	{
+
+		  		if(filters[i].id == e.target.id) 
+		  		{
+		  			filters[i].classList.add("selected-filter")
+		  			this.state.selectFilter = filters[i].id
+		  			this.lsManager.setItem("selected_button", filters[i].id)
+
+		  		} else { filters[i].classList.remove("selected-filter") }
+		  	}
+		  	this.update()
+
+		  	
+			this.lsManager.setItem("actual_page", 1);
+		  	switch(this.state.selectFilter)
+		  	{
+		  		case "popularity":
+		  			this.lsManager.setItem("sort_type", "popularity.desc")
+		  			this.lsManager.setItem("enable_date", false)
+
+		  		break;
+
+		  		case "rate":
+		  			this.lsManager.setItem("sort_type", "average.desc")
+		  			this.lsManager.setItem("enable_date", false)
+
+		  		break;
+
+		  		case "coming":
+		  			this.lsManager.setItem("sort_type", "popularity.desc")
+		  			this.lsManager.setItem("enable_date", true)
+		  			this.lsManager.setItem("release_date.gte", this.getDateInterval(0))
+		  			this.lsManager.setItem("release_date.lte", this.getDateInterval(3))
+
+		  		break;
+
+		  		case "new":
+		  			this.lsManager.setItem("sort_type", "popularity.desc")
+		  			this.lsManager.setItem("enable_date", true)
+		  			this.lsManager.setItem("release_date.gte", this.getDateInterval(-3))
+		  			this.lsManager.setItem("release_date.lte", this.getDateInterval(0))
+
+		  		break;
+
+		  		default:
+		  			this.lsManager.setItem("sort_type", "popularity.desc")
+		  		break;
+		  	}
+
+		  	let tmp = this.props.disableSearch()
+		  	tmp();
+
+		  	this.props.setIsSearching(false)
+		  	this.props.updateFilterAndGenre()
+
+		  },
+
+
+			getDateInterval(month)
+			 {
+			 	let tmp_date = new Date()
+			 	tmp_date.setMonth(tmp_date.getMonth()+month)
+				tmp_month = tmp_date.getMonth()+1
+				if(tmp_month <10) {
+				    tmp_month = "0" + tmp_month.toString()
+				}
+				let date = tmp_date.getFullYear() + "-" + tmp_month + "-" +  tmp_date.getDate()
+				return date
+			},
+
+
+	
+		}
+</script>
+
+<style>
+
+.selected-filter {
+	background-color: #275a90;
+	color:white;
+}
+
+</style>
+</filters>

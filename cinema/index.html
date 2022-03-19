@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!--<link rel="stylesheet" href="./style/tacit.css"> -->
+
+		<link rel="stylesheet"  href="./style/style.css">
+		<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+		<script src="./service.js"></script> <!-- Service AJAX -->
+		<script src="./localStorage.js"></script> <!-- Service AJAX -->
+		<!-- <script src="./global.js"></script>  -->
+
+ 		<!-- Custom tag -->
+		<script type="riot" src="./custom_tag/search.riot"></script>
+		<script type="riot" src="./custom_tag/main-parent.riot"></script>
+		<script type="riot" src="./custom_tag/movie-list.riot"></script>
+		<script type="riot" src="./custom_tag/filters.riot"></script>
+		<script type="riot" src="./custom_tag/genre-selector.riot"></script>
+		<script type="riot" src="./custom_tag/sub-filters.riot"></script>
+		<script type="riot" src="./custom_tag/star-rate.riot"></script>
+		<script type="riot" src="./custom_tag/movie-tile.riot"></script>
+		<script type="riot" src="./custom_tag/visible.riot"></script>
+
+		<!-- Compiler -->
+		<script src="https://cdn.jsdelivr.net/npm/riot@6.1.2/riot+compiler.min.js"></script>
+
+	</head>
+	<body>
+		
+		<visible></visible>
+		<search></search>
+		<filters></filters>
+		<genre-selector></genre-selector>
+		<sub-filters></sub-filters>
+
+		<movie-list id="movie-list"></movie-list>
+
+		<script>
+
+		let serviceAjax = null
+		let lsManager = null
+
+		let updatePageNum = null
+		function initUpdatePageNum(fct) {updatePageNum = fct}
+
+		let isSearching = false
+		let searchMovieUpdate = null
+		function initSearchMovieUpdate(fct) {searchMovieUpdate = fct;}
+		function setIsSearching(isSearc) { isSearching = isSearc; }
+		function getIsSearching() { return isSearching; }
+
+		let disableSearch = null
+		function getDisableSearch() { return disableSearch; }
+		function initDisableSearch(fct) { disableSearch = fct;}
+
+		let disableFilter = null
+		function initDisableFilter(fct) {disableFilter = fct; }
+
+		let disableGenres = null
+		function initDisableGenres(fct) {disableGenres = fct; }
+
+
+		let currentMovieList = []
+		let updateMovieList = null
+		function initUpdateMovieList(fct) {updateMovieList = fct; }
+		function setCurrentMovieList(movieList) { currentMovieList = movieList; }
+		function getCurrentMovieList() { return currentMovieList}
+
+
+		let updateLoading = null;
+		let isLoading = false;
+		function initUpdateLoading(fct) {updateLoading = fct; }
+		function setIsLoading(load) { isLoading = load}
+		function getIsLoading() { return isLoading }
+
+		async function updateFilterAndGenre()
+		  {
+		  	isLoading = true;
+		  	updateLoading()
+		  	setIsSearching(false)
+
+		  	console.log("Search in API with LocalStorage data : \n"
+		  		+" enable_date : " + lsManager.getItem("enable_date", false) + "\n"
+		  		+" actual_page : " + lsManager.getItem("actual_page", 1) + "\n"
+		  		+" selected_genres : " + lsManager.getItem("selected_genres", "") + "\n"
+		  		+" sort_type : " + lsManager.getItem("sort_type", "popularity.desc") + "\n"
+		  		+" release_date.lte : " + lsManager.getItem("release_date.lte", null) + "\n"
+		  		+" release_date.gte : " + lsManager.getItem("release_date.gte", null) + "\n"
+		  		)
+
+		  	if(!lsManager.getItem("enable_date", false))
+		  	{
+			  	currentMovieList = await serviceAjax.getMoviesByGenresAndFilter(
+			  		lsManager.getItem("actual_page", 1),
+			  		lsManager.getItem("selected_genres", ""), 
+			  		lsManager.getItem("sort_type", "popularity.desc")
+			  		)
+		  	} else
+		  	{
+		  		 currentMovieList = await serviceAjax.getMoviesByGenresAndFilter(
+			  		lsManager.getItem("actual_page", 1), 
+			  		lsManager.getItem("selected_genres", ""), 
+			  		lsManager.getItem("release_date.lte", null), 
+			  		lsManager.getItem("release_date.gte", null), 
+			  		lsManager.getItem("sort_type", "popularity.desc")
+			  		)
+		  	}
+
+		  	updatePageNum()
+		  	updateMovieList()
+
+		  	isLoading = false;
+		  	updateLoading()
+		  }
+
+		function debounce(fn, wait) {
+			let timeout;
+			return (...args) => {
+				clearTimeout(timeout);
+				timeout = setTimeout(() => fn(...args), wait);
+				//	timeout = setTimeout(() => fn.apply(ctx,args), wait);
+			};
+		}
+
+
+		/* Compile and Mount*/
+		(async () => {
+			await riot.compile()
+
+			serviceAjax = makeServiceAjax()
+			lsManager = makeLocalStorageManager()
+		  	let genresList = await serviceAjax.getGenres()
+
+			riot.install(function(component){
+				component.serviceAjax = serviceAjax //makeServiceAjax();
+				component.lsManager = lsManager //makeServiceAjax();
+				component.genresList = genresList
+
+			})
+
+			riot.mount('movie-list', { 
+				getCurrentMovieList: getCurrentMovieList,
+				getIsLoading: getIsLoading,
+				initUpdateMovieList: initUpdateMovieList,
+				initUpdateLoading: initUpdateLoading,
+				updateFilterAndGenre : updateFilterAndGenre,
+				genresList:genresList
+			})
+
+			riot.mount('filters', { 
+				setCurrentMovieList: setCurrentMovieList,
+				updateFilterAndGenre : updateFilterAndGenre,
+				initDisableFilter : initDisableFilter,
+				disableSearch : getDisableSearch,
+				setIsSearching:setIsSearching
+			})
+
+			riot.mount('genre-selector', { 
+				genresList: genresList,
+				setCurrentMovieList: setCurrentMovieList,
+				updateFilterAndGenre : updateFilterAndGenre,
+				initDisableGenres : initDisableGenres,
+				disableSearch : getDisableSearch,
+				setIsSearching:setIsSearching
+			})
+
+			riot.mount('search', { 
+				setCurrentMovieList: setCurrentMovieList,
+				updateMovieList : updateMovieList,
+				setIsLoading : setIsLoading,
+				updateLoading : updateLoading,
+				disableFilter : disableFilter,
+				disableGenres : disableGenres,
+				initDisableSearch : initDisableSearch,
+				initSearchMovieUpdate:initSearchMovieUpdate,
+				setIsSearching:setIsSearching,
+			})
+
+			riot.mount('sub-filters',{
+				setCurrentMovieList:setCurrentMovieList,
+				getCurrentMovieList:getCurrentMovieList,
+				updateMovieList:updateMovieList,
+				isSearching:getIsSearching,
+				searchMovieUpdate:searchMovieUpdate,
+				updateFilterAndGenre:updateFilterAndGenre,
+				initUpdatePageNum:initUpdatePageNum
+			})
+
+			riot.mount('visible', {
+				updateMovieList:updateMovieList
+			})
+				riot.mount('star-rate')
+
+			riot.mount('main-parent')
+
+		})()
+		</script>
+
+	</body>
+</html>

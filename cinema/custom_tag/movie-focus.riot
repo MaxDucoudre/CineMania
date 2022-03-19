@@ -1,0 +1,111 @@
+<movie-focus>
+
+
+<div if="{this.state.isLoading == false}" class="movie">
+
+<p>{this.state.movie.title}</p>
+
+		<img if="{this.state.posterIsLoading == false}" src="{this.state.image_path}{this.state.movie.poster_path}" class="poster"> </img>
+		<img if="{this.state.posterIsLoading == true }" src="spinning-circles.svg" />
+
+		<p>
+			<span each="genre in this.state.movie.genres">{genre.name} &ensp;</span>
+		</p>
+
+		<p>{this.state.movie.release_date}</p>
+
+		<p>
+			<span each="language in this.state.movie.spoken_languages">{(language.iso_639_1).toUpperCase()} &ensp;</span>
+		</p>
+
+
+			<!-- Récupérer le "director" le plus populaire du film -->
+		<p>De {this.state.movie_credits.crew.filter(person => person.department == "Directing").sort((function(a,b){return b.popularity - a.popularity}))[0].name}</p>
+
+		<p> Avec 
+			<span each="{actor in this.state.movie_credits.cast.sort((function(a,b){return b.popularity - a.popularity})).slice(0,5)}">
+			{actor.name}	
+		</span> 
+		</p>
+
+		<p>{this.state.movie.overview}</p>
+
+		<star-rate rate="{this.state.movie.vote_average}"></star-rate>
+
+
+
+</div>
+<img if="{this.state.isLoading == true}" src="spinning-circles.svg" />
+
+
+<script>
+
+	 export default 
+	 { 
+		  onBeforeMount (props,state) {
+		  	this.state = {
+			  movie : [],
+			  isLoading : true,
+			  posterIsLoading : false,
+			  image_path : "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/",
+			  movie_credits : []
+		  	}
+		},
+
+		onMounted(){
+			this.loadMovieInfo()
+
+			riot.mount('star-rate')
+
+		},
+
+		async loadMovieInfo()
+		{
+			/* Movie Loading */
+			this.state.isLoading = true;
+			this.update()
+
+			let url = new URLSearchParams(window.location.search);	 
+			let movieid = url.get('movie')
+			let tmp = await this.serviceAjax.getMovie(movieid)
+			let tmp2 = await this.serviceAjax.getMovieCredits(movieid)
+
+			this.update({
+				isLoading : false,
+				movie : tmp,
+				movie_credits : tmp2
+			})
+
+			console.log(this.state.movie)
+			console.log(this.state.movie_credits)
+
+			/* Poster loading */
+			let img_poster = this.$('img')
+			//console.log(img_poster)
+			if(img_poster.src == this.state.image_path)
+			{
+				this.state.image_path = "./ressources/error_movie.jpg" 
+				this.update()
+			}
+
+			this.state.posterIsLoading = true;
+			this.update()
+
+		  	img_poster.addEventListener("load", (e)=>{
+		  		this.state.posterIsLoading = false
+		  		this.update()
+		  	})
+
+
+		}
+	
+	}
+
+</script>
+
+<style>
+	img {
+		width: 100px;
+	}
+</style>
+</movie-focus>

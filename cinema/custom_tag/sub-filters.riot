@@ -1,0 +1,180 @@
+<sub-filters>
+
+
+	<ul class="sub-filters">
+		<li>Notes 
+			<a if="{this.state.notes == "up"}" onclick={sort_notes}>▲</a>
+			<a if="{this.state.notes == "down"}" onclick={sort_notes}>▼</a>
+		</li>
+
+		<li> 
+			<a onclick={previousPage}>◀</a> {this.state.current_page}/{this.state.total_page} <a onclick={nextPage}>▶</a>
+		</li>
+
+		<li>Titres
+			<a if="{this.state.titles == "up"}" onclick={sort_titles}>▲</a>
+			<a if="{this.state.titles == "down"}" onclick={sort_titles}>▼</a>
+		</li>
+
+	</ul>
+	<script>
+
+		export default 
+		{
+
+			onBeforeMount (props,state) {
+				this.state = {
+					notes : "down",
+					titles : "down",
+					total_page : 1,
+					current_page : 1
+				}
+
+				this.props.initUpdatePageNum(this.updatePageNum)
+			},
+
+			onMounted()
+			{
+
+			},
+
+
+
+			updatePageNum()
+			{
+				let tmp = this.props.getCurrentMovieList()
+
+				if(tmp != [] && tmp.length != 0)
+				{
+					this.update({
+						total_page : tmp.total_pages,
+						current_page : tmp.page
+					})
+				}
+			},
+
+
+			nextPage()
+			{
+				let new_page;
+				if(this.state.current_page < this.state.total_page)
+					new_page = this.state.current_page + 1;
+
+				if(this.state.current_page == this.state.total_page)
+					new_page = 1;
+
+				
+				this.lsManager.setItem("actual_page", new_page)
+
+				if(this.props.isSearching()) {
+					this.props.searchMovieUpdate()
+				}else {
+					this.props.updateFilterAndGenre()
+				}
+
+			},
+
+			previousPage()
+			{
+
+				let new_page = 1
+				if(this.state.current_page > 1)
+					new_page = this.state.current_page - 1
+				
+				if(this.state.current_page == 1)
+					new_page = 500//this.state.total_page;
+
+
+				this.lsManager.setItem("actual_page", new_page)
+
+				if(this.props.isSearching()) {
+					this.props.searchMovieUpdate()
+				}else {
+					this.props.updateFilterAndGenre()
+				}
+				this.updatePageNum();
+
+			},
+
+
+			sort_titles()
+			{
+				if(this.state.titles == "down")
+				{
+					this.update({
+						titles : "up",
+						notes : "down"
+					})
+
+					let movieList = this.props.getCurrentMovieList()
+					let sorted_movieList = movieList.results.sort(function(a,b){
+						if(a.title < b.title) { return -1; }
+						if(a.title > b.title) { return 1; }
+						return 0;
+					})
+					movieList.results = sorted_movieList
+					this.props.setCurrentMovieList(movieList)
+					this.props.updateMovieList();
+				} else 
+				{
+					this.update({
+						titles : "down",
+						notes : "down"
+					})
+
+					let movieList = this.props.getCurrentMovieList()
+					let sorted_movieList = movieList.results.sort(function(a,b){
+						if(a.title < b.title) { return 1; }
+						if(a.title > b.title) { return -1; }
+						return 0;
+					})
+					movieList.results = sorted_movieList
+					this.props.setCurrentMovieList(movieList)
+					this.props.updateMovieList();
+				}
+
+			},
+
+			sort_notes()
+			{
+				if(this.state.notes == "down")
+				{
+					this.update({
+						notes : "up",
+						titles : "down"
+
+					})
+
+					let movieList = this.props.getCurrentMovieList()
+					let sorted_movieList = movieList.results.sort(function(a,b){
+						if(a.vote_average < b.vote_average) { return -1; }
+						if(a.vote_average > b.vote_average) { return 1; }
+						return 0;
+					})
+					movieList.results = sorted_movieList
+					this.props.setCurrentMovieList(movieList)
+					this.props.updateMovieList();
+				} else 
+				{
+					this.update({
+						notes : "down",
+						titles : "down"
+					})
+
+					let movieList = this.props.getCurrentMovieList()
+					let sorted_movieList = movieList.results.sort(function(a,b){
+						if(a.vote_average < b.vote_average) { return 1; }
+						if(a.vote_average > b.vote_average) { return -1; }
+						return 0;
+					})
+					movieList.results = sorted_movieList
+					this.props.setCurrentMovieList(movieList)
+					this.props.updateMovieList();
+				}
+
+			},
+
+
+		}
+	</script>
+</sub-filters>

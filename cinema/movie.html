@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		 <link rel="stylesheet" href="./style/tacit.css"> 
+
+		<link rel="stylesheet"  href="./style/style.css">
+
+		<script src="./service.js"></script> <!-- Service AJAX -->
+		<!-- <script src="./global.js"></script>  -->
+
+ 		<!-- Custom tag -->
+		<script type="riot" src="./custom_tag/movie-focus.riot"></script>
+		<script type="riot" src="./custom_tag/star-rate.riot"></script>
+
+		<!-- Compiler -->
+		<script src="https://cdn.jsdelivr.net/npm/riot@6.1.2/riot+compiler.min.js"></script>
+
+	</head>
+	<body>
+
+		<movie-focus></movie-focus>
+
+		<script>
+	 	/* Compile and Mount*/
+		(async () => {
+			await riot.compile()
+
+			serviceAjax = makeServiceAjax()
+		  	let genresList = await serviceAjax.getGenres()
+
+			riot.install(function(component){
+				component.serviceAjax = serviceAjax //makeServiceAjax();
+				component.genresList = genresList
+
+			})
+
+
+
+			riot.mount('movie-focus') 
+		})()
+
+		</script>
+
+	</body>
+</html>

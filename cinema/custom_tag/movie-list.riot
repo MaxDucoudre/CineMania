@@ -1,0 +1,77 @@
+<movie-list>
+
+
+<img if={this.state.isLoading == true } src="spinning-circles.svg" />
+
+<movie-tile each={movie in this.state.currentMovieList.results} movie="{movie}"> </movie-tile>
+
+<script>
+	 export default 
+	 { 
+
+		  onBeforeMount (props,state) {
+		  	this.state = {
+			  isLoading : false,
+			  currentMovieList : []
+		  	}
+
+		  	this.props.initUpdateMovieList((fct)=>
+		  	{
+		  		this.update({
+		  			currentMovieList: this.props.getCurrentMovieList()
+		  		})
+		  		console.log("Movie list updated!")
+		  	})
+
+		  	this.props.initUpdateLoading((fct)=>
+		  	{
+		  		this.update({
+		  			isLoading: this.props.getIsLoading()
+		  		})
+		  	})
+
+
+
+		  },
+
+		  onMounted()
+		  {
+		  	this.props.updateFilterAndGenre()
+
+			riot.mount('movie-tile')
+
+
+		  },
+
+
+		  async setDefaultMovieList()
+		  {
+		  	this.startLoading();
+		  	this.setCurrentMovieList( await this.serviceAjax.getMovies(1))
+		  	this.endLoading();
+		  },
+
+
+		  startLoading() { this.update({ isLoading: true }) },
+
+		  endLoading() { this.update({ isLoading: false }) },
+
+		  setCurrentMovieList(movieList){ this.update({ currentMovieList: movieList}) }
+
+
+		
+
+	
+
+		}
+</script>
+
+
+<style>
+
+img{
+	width: 100px
+}
+
+</style>
+</movie-list>

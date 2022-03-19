@@ -1,0 +1,136 @@
+<genre-selector>
+
+
+<label for="genre-names">Genre </label>
+
+<select onchange="{ select }" name="genre-names" value="1">
+    <option each={genre in this.state.genreList} value="{genre.id}"> {genre.name}</option>
+</select>
+
+<button onclick="{ add }" > Ajouter </button>
+
+
+<div>
+	<a each="{genre in this.state.appliedGenres}" onclick="{ remove }" id="{genre.id}">{genre.name}</a>
+</div>
+
+<script>
+	 export default 
+	 {
+
+		  onBeforeMount (props,state) {
+		  	this.state = {
+		  		genreList: [],
+		  		selectedGenre: [],
+		  		appliedGenres : []
+		  	}
+
+		  	this.props.initDisableGenres((fct)=>
+		  	{
+		  		this.update({
+		  			appliedGenres: []
+		  		})
+		  		this.lsManager.setItem("selected_genres", null)
+		  	})
+
+		  	this.state.genreList = this.props.genresList.genres
+		  	this.state.selectedGenre = this.state.genreList[0]
+		  	this.synchronizeLocalStorageWithGenre();
+		  },
+
+		  select(e)
+		  {
+
+		  	
+			this.state.selectedGenre = this.state.genreList.find(element => element.id == e.target.value);
+		  },
+
+		  add(e)
+		  {
+		  	if(this.state.appliedGenres.find(element => element.id == this.state.selectedGenre.id) == undefined)
+		  	{
+		  		this.state.appliedGenres.push(this.state.selectedGenre)
+
+		  		let tmp = this.props.disableSearch()
+		  		tmp();
+
+		  		this.updateLocalStorageGenre()
+
+
+		  		this.props.setIsSearching()
+		  		this.props.updateFilterAndGenre()
+
+
+		  		this.update()
+		  	} else {
+		  		console.log("This genre already exist!")
+		  	}
+		  },
+
+		  remove(e)
+		  {
+		  	this.state.appliedGenres = this.state.appliedGenres.filter(element => element.id != e.target.id)
+
+		  	this.updateLocalStorageGenre()
+
+		  	let tmp = this.props.disableSearch()
+		  	tmp();
+
+		  	this.props.setIsSearching()
+		  	this.props.updateFilterAndGenre()
+
+		  	this.update()
+		  },
+
+
+		  updateLocalStorageGenre()
+		  {
+		  	let tmp = "";
+		  	for(let i = 0; i<this.state.appliedGenres.length; i++) {
+		  		tmp += this.state.appliedGenres[i].id + ","
+		  	}
+
+			let tmp2 = tmp.substr(0, tmp.length - 1);
+
+			this.lsManager.setItem("actual_page", 1);
+		  	this.lsManager.setItem("selected_genres", tmp2)
+
+		  },
+
+		  async synchronizeLocalStorageWithGenre()
+		  {
+		  	let tmp_str = this.lsManager.getItem("selected_genres", "")
+
+		  	if(tmp_str == "")
+		  		return null
+
+		  	let ids = tmp_str.split(',')
+
+		  	this.state.appliedGenres = []
+
+		  	for(let i = 0; i<ids.length; i++)
+		  	{
+		  		this.state.appliedGenres.push(
+		  		{
+		  			id: parseInt(ids[i]),
+		  			name: await this.getGenreNameFromId(parseInt(ids[i]))
+		  		})
+		  	}
+		  	this.updateLocalStorageGenre()
+		  	this.update()
+
+		  },
+
+		  async getGenreNameFromId(id)
+		  {
+			let genres = await this.serviceAjax.getGenres()
+			for(let i =0; i<genres['genres'].length; i++) {
+				if(genres['genres'][i]['id'] == id) 
+					return genres['genres'][i]['name']
+			}
+			return null
+		  }
+	
+		}
+</script>
+</genre-selector>
